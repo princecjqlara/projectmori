@@ -1,0 +1,48 @@
+{
+  "name": "project-mori",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --hostname 127.0.0.1",
+    "build": "next build",
+    "start": "next start --hostname 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:browser": "playwright test",
+    "test:database": "tsx scripts/verify-database.ts",
+    "test:integration": "tsx scripts/verify-api.ts",
+    "test:tenancy:webhook": "tsx scripts/verify-tenancy-webhook.ts",
+    "test:autofill:live": "tsx scripts/verify-autofill.ts",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "doctor": "tsx scripts/doctor.ts",
+    "worker": "tsx scripts/worker.ts",
+    "supabase:init": "supabase init",
+    "supabase:link": "supabase link --project-ref qbfizfgytzcuwydjbate"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.86.0",
+    "dotenv": "^17.2.3",
+    "lucide-react": "^0.577.0",
+    "luxon": "^3.7.2",
+    "mammoth": "^1.11.0",
+    "next": "16.4.6",
+    "pg": "^8.16.3",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "server-only": "^0.0.1",
+    "unpdf": "^1.4.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@types/luxon": "^3.7.1",
+    "@types/node": "^22.10.0",
+    "@types/pg": "^8.15.6",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "supabase": "^2.101.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "4.0.18"
+  }
+}

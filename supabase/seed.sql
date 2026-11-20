@@ -1,0 +1,1 @@
+-- Business records are created only by users and connected services. No sample data is seeded.

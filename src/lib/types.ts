@@ -1,0 +1,170 @@
+export type Role = "head" | "admin" | "member";
+export type Stage = "qualified" | "not_qualified" | "converted";
+export type BotState = "intake" | "faq" | "human" | "stopped";
+export type IntakeField = {
+  key: string;
+  label: string;
+  required: boolean;
+  type: "text" | "email" | "phone" | "number" | "choice";
+  options?: string[];
+  qualify?: string[];
+};
+export type Tenant = {
+  id: string;
+  name: string;
+  timezone: string;
+  currency: string;
+  expense_percent: number;
+  expense_threshold_minor: number;
+  automation_enabled: boolean;
+  bot_enabled: boolean;
+  autofill_enabled?: boolean;
+  aov_spend_multiplier: number;
+  min_ad_days: number;
+  intake_fields: IntakeField[];
+  followup_templates: string[];
+  role: Role;
+};
+export type Contact = {
+  id: string;
+  tenant_id: string;
+  page_id: string | null;
+  external_id: string | null;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  stage: Stage;
+  bot_state: BotState;
+  first_inquiry_at: string;
+  last_inbound_at: string | null;
+  converted_at: string | null;
+  ad_window_opened_at: string | null;
+  source_ad_id: string | null;
+  source: string;
+  timezone: string | null;
+  form_answers: Record<string, string>;
+  objections: string[];
+  notes: string;
+  opted_out: boolean;
+  assigned_to: string | null;
+  autofill_evidence?: Record<string, AutofillEvidence>;
+};
+export type AutofillEvidence = {
+  value: string;
+  source_message_id: string;
+  source_text: string;
+  source_sent_at: string;
+  probability: number;
+  filled_at: string;
+  provider: string;
+  model: string;
+};
+export type Message = {
+  id: string;
+  contact_id: string;
+  direction: "inbound" | "outbound";
+  sender: "contact" | "bot" | "agent";
+  text: string;
+  sent_at: string;
+  media_url: string | null;
+  media_type: string | null;
+  status: string;
+  external_id?: string | null;
+};
+export type Order = {
+  id: string;
+  contact_id: string;
+  amount_minor: number;
+  status: "pending" | "paid" | "cancelled" | "refunded";
+  notes: string;
+  created_at: string;
+  paid_at: string | null;
+  currency: string;
+};
+export type Ad = {
+  id: string;
+  account_id: string;
+  name: string;
+  creative_name: string;
+  thumbnail_url: string | null;
+  status: string;
+  daily_budget_minor: number | null;
+  automation_enabled: boolean;
+};
+export type AdSpend = {
+  id: string;
+  ad_id: string;
+  day: string;
+  spend_minor: number;
+  impressions: number;
+  clicks: number;
+};
+export type Resource = {
+  id: string;
+  name: string;
+  type: "page" | "ad_account";
+  status: string;
+  currency: string | null;
+  timezone: string | null;
+};
+export type Member = {
+  user_id: string;
+  name: string;
+  email: string;
+  role: Role;
+  assignments: string[];
+};
+export type KnowledgeDocument = {
+  id: string;
+  name: string;
+  status: "processing" | "ready" | "failed";
+  chunk_count: number;
+  created_at: string;
+  error: string | null;
+};
+export type Faq = {
+  id: string;
+  question: string;
+  answer: string;
+  active: boolean;
+  media_url: string | null;
+  media_type: string | null;
+};
+export type Touchpoint = {
+  id: string;
+  contact_id: string;
+  day_number: number;
+  scheduled_at: string;
+  status: string;
+  reason: string | null;
+  template: string;
+};
+export type AuditEvent = {
+  id: string;
+  action: string;
+  details: Record<string, unknown>;
+  created_at: string;
+};
+export type Snapshot = {
+  tenant: Tenant;
+  contacts: Contact[];
+  orders: Order[];
+  ads: Ad[];
+  spend: AdSpend[];
+  resources: Resource[];
+  members: Member[];
+  documents: KnowledgeDocument[];
+  faqs: Faq[];
+  touchpoints: Touchpoint[];
+  messages: Message[];
+  audit: AuditEvent[];
+  integrations: {
+    supabase: boolean;
+    cloudinary: boolean;
+    facebook: boolean;
+    jev: boolean;
+    jev_provider?: string;
+    jev_model?: string;
+    embeddings: boolean;
+  };
+};
