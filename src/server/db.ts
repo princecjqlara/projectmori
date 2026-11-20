@@ -24,6 +24,16 @@ export const pool =
       ],
     },
   });
+if (pool.listenerCount("error") === 0) {
+  // pg removes a broken idle connection itself. Handle the event so a network
+  // reset does not crash the worker or dump connection details into its logs.
+  pool.on("error", (error: Error & { code?: string }) => {
+    const code = /^[A-Z0-9_]{1,32}$/.test(error.code || "")
+      ? error.code
+      : "CONNECTION_ERROR";
+    console.error("Mori idle database connection closed:", code);
+  });
+}
 if (process.env.NODE_ENV !== "production") globalDb.moriPool = pool;
 export type DB = Pick<PoolClient, "query">;
 export async function transaction<T>(

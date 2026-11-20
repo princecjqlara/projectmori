@@ -16,7 +16,7 @@ npm run dev
 
 Open **http://127.0.0.1:3000**. Signed-out visitors go to `/sign-in`. Email/password, email confirmation, password reset, invitations, and Facebook sign-in use Supabase Auth. New accounts start with no business records and create their own workspace or join an explicit invitation. There is no demo workspace or seeded customer data.
 
-Enable **Facebook** in Supabase Authentication → Sign In / Providers using the Meta app credentials. In Meta, add `https://qbfizfgytzcuwydjbate.supabase.co/auth/v1/callback` as a Valid OAuth Redirect URI. This login callback is separate from `/api/facebook/callback`, which connects business Pages and ad accounts after signing in. Set Supabase Auth Site URL to your app origin and allow `/auth/callback` and `/auth/callback?next=/set-password` for both localhost and the current ngrok origin. The PKCE email link must be opened in the same browser that requested it. Team invitations also accept Supabase’s implicit invitation session. Roles always come from workspace memberships in PostgreSQL, never from login profile metadata.
+The public app is **https://projectmori.vercel.app**. Enable **Facebook** in Supabase Authentication → Sign In / Providers using the Meta app credentials. In Meta, add `https://qbfizfgytzcuwydjbate.supabase.co/auth/v1/callback` as a Valid OAuth Redirect URI. This login callback is separate from `https://projectmori.vercel.app/api/facebook/callback`, which connects business Pages and ad accounts after signing in. Set Supabase Auth Site URL to `https://projectmori.vercel.app` and allow `https://projectmori.vercel.app/auth/callback` and `https://projectmori.vercel.app/auth/callback?next=/set-password`. The PKCE email link must be opened in the same browser that requested it. Team invitations also accept Supabase’s implicit invitation session. Roles always come from workspace memberships in PostgreSQL, never from login profile metadata.
 
 Run the background worker in a second terminal:
 
@@ -83,10 +83,10 @@ Unknown ratios display **—**, not fabricated zeroes. Refunds remove entire ref
 
 ## Meta setup for live use
 
-1. Serve the application over a stable public HTTPS URL and set `APP_URL` to it.
+1. The production URL and `APP_URL` are `https://projectmori.vercel.app`.
    Add that URL to Supabase Auth's Site URL/allowed redirect URLs too. For local email confirmation, allow `http://127.0.0.1:3000`. Use the same hostname as `APP_URL` when opening the app so the OAuth state cookie matches the callback.
-2. In the Meta app, configure Facebook Login for business use and register the exact redirect URI: `https://YOUR-HOST/api/facebook/callback`.
-3. Configure the Messenger webhook: `https://YOUR-HOST/api/webhooks/facebook`. Use `FACEBOOK_WEBHOOK_VERIFY_TOKEN` from `.env.local` as the verify token.
+2. In the Meta app, configure Facebook Login for business use and register the exact redirect URI: `https://projectmori.vercel.app/api/facebook/callback`.
+3. Configure the Messenger webhook: `https://projectmori.vercel.app/api/webhooks/facebook`. Use `FACEBOOK_WEBHOOK_VERIFY_TOKEN` from `.env.local` as the verify token.
 4. Configure/review the necessary permissions: `pages_show_list`, `pages_read_engagement`, `pages_manage_metadata`, `pages_messaging`, `ads_read`, `ads_management`, and `business_management`. Actual access depends on app mode, business verification, review, and the connecting user's permissions. `HUMAN_AGENT` also requires Meta approval.
 5. In Mori, sign in, create a workspace, and choose **Settings → Connect Facebook**. Page subscriptions include `messages`, `messaging_postbacks`, and `messaging_referrals` for messages and acquisition attribution.
 6. Assign Pages and ad accounts to members, sync ads, upload approved knowledge, and enable the assistant when ready. Ad automation remains off until explicitly enabled.
@@ -110,7 +110,7 @@ npm run build
 
 `test:database` tests tenant/Page isolation, token protection, write restrictions, and order/refund consistency inside a rolled-back transaction. `test:browser` uses installed Chrome; change the Playwright channel if necessary. Screenshots are saved under ignored `.local/`.
 
-With the application, worker, and public ngrok URL running, `test:tenancy:webhook` checks separate authenticated tenants, head/admin/member permissions, assigned Pages, role escalation rejection, the public webhook challenge and HMAC signature checks, durable queueing, duplicate suppression, processing by the running worker, and the Meta app’s active subscription. It removes all its temporary records and users and sends no customer messages.
+With the application, worker, and public deployment running, `test:tenancy:webhook` checks separate authenticated tenants, head/admin/member permissions, assigned Pages, role escalation rejection, the public webhook challenge and HMAC signature checks, durable queueing, duplicate suppression, processing by the running worker, and the Meta app’s active subscription. Both API and webhook requests use `APP_URL`. It removes all its temporary records and users and sends no customer messages.
 
 With the local server running, `npm run test:integration` verifies real Supabase authentication and API persistence, automatic indexing, Cloudinary upload, and Messenger event ingestion. It creates an email-confirmed ephemeral test user **without sending email**, then removes its user, workspace, data, and uploaded test media.
 

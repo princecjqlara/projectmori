@@ -1,20 +1,17 @@
 import { qaAuth, qaUser, cleanupQa } from "./qa-support";
 import assert from "node:assert/strict";
 import { createHash, createHmac, randomUUID } from "node:crypto";
-import { Resolver } from "node:dns";
 import https from "node:https";
 
 async function main() {
   const { pool } = await import("../src/server/db");
   const users: string[] = [], tenants: string[] = [], eventIds: string[] = [];
-  const resolver = new Resolver(); resolver.setServers(["1.1.1.1", "8.8.8.8"]);
   function publicRequest(path: string, method = "GET", raw?: string, signature?: string) {
     return new Promise<{ status: number; body: string }>((resolve, reject) => {
       const url = new URL(path, process.env.APP_URL);
       const request = https.request(url, {
         method, timeout: 20000,
-        lookup: ((host: string, opts: any, cb: any) => resolver.resolve4(host, (e, ips) => e ? cb(e) : opts.all ? cb(null, ips.map(address => ({ address, family: 4 }))) : cb(null, ips[0], 4))) as any,
-        headers: { "ngrok-skip-browser-warning": "1", ...(raw ? { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(raw), "x-hub-signature-256": signature! } : {}) },
+        headers: raw ? { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(raw), "x-hub-signature-256": signature! } : {},
       }, response => {
         const chunks: Buffer[] = [];
         response.on("data", chunk => chunks.push(chunk));
@@ -25,7 +22,7 @@ async function main() {
     });
   }
   async function call(token: string, tenant: string, path: string, method = "GET", body?: unknown) {
-    const r = await fetch(`http://127.0.0.1:3000/api/${path}`, { method, headers: { Authorization: `Bearer ${token}`, "x-tenant-id": tenant, "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
+    const r = await fetch(new URL(`/api/${path}`, process.env.APP_URL), { method, headers: { Authorization: `Bearer ${token}`, "x-tenant-id": tenant, "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
     return { status: r.status, data: await r.json() };
   }
   try {
@@ -86,7 +83,7 @@ async function main() {
     assert.equal((await publicRequest("/api/webhooks/facebook", "POST", raw, signature)).status, 200);
     assert.equal((await publicRequest("/api/webhooks/facebook", "POST", raw, signature)).status, 200);
     assert.equal((await pool.query("select id from mori_webhook_events where id=$1", [id])).rowCount, 1);
-    console.log("PASS: public ngrok callback verification, invalid token/signature rejection, durable queue acknowledgement, and duplicate delivery suppression. Waiting for the running worker…");
+    console.log("PASS: public callback verification, invalid token/signature rejection, durable queue acknowledgement, and duplicate delivery suppression. Waiting for the running worker…");
     let state = "pending";
     for (let attempt = 0; attempt < 24; attempt++) {
       state = (await pool.query("select status from mori_webhook_events where id=$1", [id])).rows[0]?.status;
@@ -106,7 +103,7 @@ async function main() {
     assert.ok(page?.active, "Meta Page webhook must be active for the current public URL");
     const fields = page.fields.map((f: any) => typeof f === "string" ? f : f.name);
     for (const name of ["messages", "messaging_postbacks", "messaging_referrals"]) assert.ok(fields.includes(name), name);
-    console.log("PASS: Meta reports an active Page webhook subscription with messages, postbacks, and referrals for the current ngrok callback.");
+    console.log("PASS: Meta reports an active Page webhook subscription with messages, postbacks, and referrals for the production callback.");
   } finally {
     await cleanupQa(tenants, users, eventIds);
     console.log("Removed all temporary test users, workspaces, records, and webhook events.");
